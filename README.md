@@ -1,6 +1,6 @@
 # 🚨 CrisisFlow - Real-time AI-Powered Disaster Intelligence Platform
 
-**Confluent Challenge Submission** - AI Partner Catalyst Hackathon 2024
+**Confluent Challenge Submission** - AI Partner Catalyst Hackathon 2025
 
 🏆 **Unleashing the power of AI on data in motion to save lives!**
 
