@@ -31,7 +31,7 @@ gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 
 # Run the deployment script
-./deploy.sh YOUR_PROJECT_ID
+./scripts/deploy.sh YOUR_PROJECT_ID
 ```
 
 ## Manual Deployment Steps

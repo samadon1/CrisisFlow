@@ -179,7 +179,10 @@ crisisflow/
 │
 └── scripts/
     ├── setup_confluent.sh         # Confluent Cloud setup helper
-    └── deploy.sh                  # Deployment script
+    ├── deploy.sh                  # Deployment script
+    ├── create_topics.py           # Kafka topic creation
+    ├── test_connection.py         # Connection testing
+    └── start_*.sh                 # Service startup scripts
 ```
 
 ---

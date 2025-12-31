@@ -1,105 +1,115 @@
 #!/bin/bash
 
-# CrisisFlow Deployment Script
-# Deploys backend to Google Cloud Run and frontend to Vercel
+# CrisisFlow Deployment Script for Google Cloud Run
+# Usage: ./deploy.sh [project-id]
 
 set -e
 
-echo "🚀 CrisisFlow Deployment Script"
-echo "================================"
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# Check for required environment variables
-if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
-    echo "❌ Error: GOOGLE_CLOUD_PROJECT not set"
-    echo "Please run: export GOOGLE_CLOUD_PROJECT=your-project-id"
+# Check if project ID is provided
+if [ -z "$1" ]; then
+    echo -e "${RED}Error: Please provide your GCP project ID${NC}"
+    echo "Usage: ./deploy.sh your-project-id"
     exit 1
 fi
 
-# Deploy Backend to Google Cloud Run
-deploy_backend() {
-    echo "📦 Deploying Backend to Google Cloud Run..."
+PROJECT_ID=$1
+REGION="us-central1"
+BACKEND_SERVICE="crisisflow-backend"
+FRONTEND_SERVICE="crisisflow-frontend"
 
-    cd backend
+echo -e "${GREEN}🚀 Starting CrisisFlow deployment to Google Cloud Run${NC}"
+echo "Project: $PROJECT_ID"
+echo "Region: $REGION"
 
-    # Build container
-    echo "Building container..."
-    gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/crisisflow-api
+# Check if gcloud is installed
+if ! command -v gcloud &> /dev/null; then
+    echo -e "${RED}Error: gcloud CLI is not installed${NC}"
+    echo "Please install it from: https://cloud.google.com/sdk/docs/install"
+    exit 1
+fi
 
-    # Deploy to Cloud Run
-    echo "Deploying to Cloud Run..."
-    gcloud run deploy crisisflow-api \
-        --image gcr.io/$GOOGLE_CLOUD_PROJECT/crisisflow-api \
-        --platform managed \
-        --region us-central1 \
-        --allow-unauthenticated \
-        --port 8000 \
-        --memory 512Mi \
-        --max-instances 10 \
-        --set-env-vars "ENVIRONMENT=production"
+# Set project
+echo -e "${YELLOW}Setting GCP project...${NC}"
+gcloud config set project $PROJECT_ID
 
-    # Get the service URL
-    SERVICE_URL=$(gcloud run services describe crisisflow-api --platform managed --region us-central1 --format 'value(status.url)')
-    echo "✅ Backend deployed at: $SERVICE_URL"
+# Enable required APIs
+echo -e "${YELLOW}Enabling required APIs...${NC}"
+gcloud services enable run.googleapis.com \
+    containerregistry.googleapis.com \
+    cloudbuild.googleapis.com
 
-    cd ..
-    return 0
-}
+# Build and deploy backend
+echo -e "${GREEN}Building and deploying backend...${NC}"
+cd backend
 
-# Deploy Frontend to Vercel
-deploy_frontend() {
-    echo "📦 Deploying Frontend to Vercel..."
+# Build container
+gcloud builds submit --tag gcr.io/$PROJECT_ID/$BACKEND_SERVICE
 
-    cd frontend
+# Deploy to Cloud Run
+gcloud run deploy $BACKEND_SERVICE \
+    --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE \
+    --platform managed \
+    --region $REGION \
+    --allow-unauthenticated \
+    --memory 2Gi \
+    --cpu 2 \
+    --max-instances 10 \
+    --min-instances 1 \
+    --port 8080 \
+    --set-env-vars="PORT=8080"
 
-    # Update API URL in .env.production
-    echo "VITE_API_URL=$SERVICE_URL/api" > .env.production
+# Get backend URL
+BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE \
+    --platform managed \
+    --region $REGION \
+    --format 'value(status.url)')
 
-    # Build frontend
-    echo "Building frontend..."
-    npm install
-    npm run build
+echo -e "${GREEN}Backend deployed at: $BACKEND_URL${NC}"
 
-    # Deploy to Vercel
-    echo "Deploying to Vercel..."
-    npx vercel --prod
+# Build and deploy frontend
+echo -e "${GREEN}Building and deploying frontend...${NC}"
+cd ../frontend
 
-    echo "✅ Frontend deployed!"
+# Update frontend to use backend URL
+echo "VITE_API_URL=$BACKEND_URL/api" > .env.production
 
-    cd ..
-    return 0
-}
+# Build container
+gcloud builds submit --tag gcr.io/$PROJECT_ID/$FRONTEND_SERVICE
 
-# Deploy Producers (optional - could run on Cloud Run or Compute Engine)
-deploy_producers() {
-    echo "📦 Deploying Producers..."
-    echo "Note: Producers can run locally or on a VM for the hackathon"
-    echo "For production, consider:"
-    echo "- Google Compute Engine with startup scripts"
-    echo "- Cloud Run Jobs (for scheduled execution)"
-    echo "- Kubernetes Engine for orchestration"
-}
+# Deploy to Cloud Run
+gcloud run deploy $FRONTEND_SERVICE \
+    --image gcr.io/$PROJECT_ID/$FRONTEND_SERVICE \
+    --platform managed \
+    --region $REGION \
+    --allow-unauthenticated \
+    --memory 512Mi \
+    --cpu 1 \
+    --max-instances 10 \
+    --min-instances 1 \
+    --port 8080
 
-# Main deployment flow
-main() {
-    echo "Starting deployment..."
+# Get frontend URL
+FRONTEND_URL=$(gcloud run services describe $FRONTEND_SERVICE \
+    --platform managed \
+    --region $REGION \
+    --format 'value(status.url)')
 
-    # Deploy backend first to get the URL
-    deploy_backend
-
-    # Deploy frontend with backend URL
-    deploy_frontend
-
-    echo ""
-    echo "🎉 Deployment Complete!"
-    echo "========================"
-    echo "Backend: $SERVICE_URL"
-    echo "Frontend: Check Vercel dashboard for URL"
-    echo ""
-    echo "Next steps:"
-    echo "1. Update Confluent Cloud topics if needed"
-    echo "2. Start producers locally or on a VM"
-    echo "3. Monitor logs in Google Cloud Console"
-}
-
-# Run main function
-main
+echo -e "${GREEN}✅ Deployment complete!${NC}"
+echo ""
+echo "🌐 Frontend: $FRONTEND_URL"
+echo "🔧 Backend API: $BACKEND_URL"
+echo ""
+echo -e "${YELLOW}⚠️  Important: Set environment variables in Cloud Console:${NC}"
+echo "  - GOOGLE_API_KEY"
+echo "  - TOMORROW_API_KEY"
+echo "  - CONFLUENT_BOOTSTRAP_SERVERS"
+echo "  - CONFLUENT_API_KEY"
+echo "  - CONFLUENT_API_SECRET"
+echo ""
+echo "Visit: https://console.cloud.google.com/run/detail/$REGION/$BACKEND_SERVICE/revisions?project=$PROJECT_ID"
