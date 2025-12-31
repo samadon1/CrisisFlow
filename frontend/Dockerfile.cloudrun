@@ -1,0 +1,21 @@
+# Simple runtime-only Dockerfile for Cloud Run
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files and install production dependencies only
+COPY package*.json ./
+RUN npm install --production
+
+# Copy the server file
+COPY server.js .
+
+# Copy the pre-built dist folder
+COPY dist ./dist
+
+# Copy the production env file
+COPY .env.production .
+
+EXPOSE 8080
+
+CMD ["node", "server.js"]

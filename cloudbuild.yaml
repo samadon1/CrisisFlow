@@ -1,0 +1,64 @@
+# Cloud Build configuration for CrisisFlow deployment
+steps:
+  # Build and deploy backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/crisisflow-backend:$COMMIT_SHA', './backend']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/crisisflow-backend:$COMMIT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'crisisflow-backend'
+      - '--image=gcr.io/$PROJECT_ID/crisisflow-backend:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--max-instances=10'
+      - '--min-instances=1'
+      - '--set-env-vars=GOOGLE_API_KEY=${_GOOGLE_API_KEY}'
+      - '--set-env-vars=TOMORROW_API_KEY=${_TOMORROW_API_KEY}'
+      - '--set-env-vars=CONFLUENT_BOOTSTRAP_SERVERS=${_CONFLUENT_BOOTSTRAP_SERVERS}'
+      - '--set-env-vars=CONFLUENT_API_KEY=${_CONFLUENT_API_KEY}'
+      - '--set-env-vars=CONFLUENT_API_SECRET=${_CONFLUENT_API_SECRET}'
+
+  # Build and deploy frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/crisisflow-frontend:$COMMIT_SHA', './frontend']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/crisisflow-frontend:$COMMIT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'crisisflow-frontend'
+      - '--image=gcr.io/$PROJECT_ID/crisisflow-frontend:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--max-instances=10'
+      - '--min-instances=1'
+      - '--set-env-vars=BACKEND_URL=https://crisisflow-backend-xxxxx-uc.a.run.app'
+
+timeout: '1200s'
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'
+
+# Substitutions (set these in Cloud Build trigger or via command line)
+substitutions:
+  _GOOGLE_API_KEY: ''
+  _TOMORROW_API_KEY: ''
+  _CONFLUENT_BOOTSTRAP_SERVERS: ''
+  _CONFLUENT_API_KEY: ''
+  _CONFLUENT_API_SECRET: ''

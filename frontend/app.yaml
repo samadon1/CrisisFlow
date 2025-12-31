@@ -1,0 +1,26 @@
+runtime: nodejs20
+env: standard
+
+instance_class: F1
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+  target_cpu_utilization: 0.65
+
+handlers:
+  # Serve static files
+  - url: /assets
+    static_dir: dist/assets
+    secure: always
+    expiration: "30d"
+
+  # Serve index.html for all routes (SPA)
+  - url: /.*
+    static_files: dist/index.html
+    upload: dist/index.html
+    secure: always
+
+env_variables:
+  NODE_ENV: "production"
+  VITE_API_URL: "https://crisisflow-backend-298461721433.us-central1.run.app/api"

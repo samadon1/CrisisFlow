@@ -1,0 +1,243 @@
+/* Event Feed - Command Center / Terminal Style */
+
+.event-feed-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.event-feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 0.5rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.feed-title {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-family: var(--font-mono);
+}
+
+.feed-count {
+  font-size: 0.65rem;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  padding: 0.125rem 0.4rem;
+  background: rgba(94, 194, 105, 0.08);
+  border-radius: 2px;
+  border: 1px solid rgba(94, 194, 105, 0.2);
+}
+
+.event-feed {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scroll-behavior: smooth;
+  background: var(--bg-primary);
+}
+
+.event-feed::-webkit-scrollbar {
+  width: 3px;
+}
+
+.event-feed::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.event-feed::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 2px;
+}
+
+/* Empty State */
+.feed-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.feed-waiting {
+  animation: pulse 2s infinite;
+}
+
+/* Event Stream - Terminal Style */
+.event-stream {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.stream-entry {
+  border-left: 2px solid transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: all 0.15s ease;
+}
+
+.stream-entry:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stream-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.375rem 0.5rem 0.25rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.stream-details-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem 0.375rem 0.5rem;
+}
+
+.stream-details {
+  flex: 1;
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.stream-view-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.stream-view-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+/* New event animation (typing effect) */
+.stream-new {
+  animation: stream-in 0.3s ease-out;
+}
+
+@keyframes stream-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Risk level colors (left border) */
+.stream-entry.risk-critical {
+  border-left-color: var(--accent-red);
+}
+
+.stream-entry.risk-high {
+  border-left-color: var(--accent-orange);
+}
+
+.stream-entry.risk-moderate {
+  border-left-color: var(--accent-yellow);
+}
+
+.stream-entry.risk-low {
+  border-left-color: var(--accent-green);
+}
+
+/* Stream Line Components */
+.stream-timestamp {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  min-width: 65px;
+  flex-shrink: 0;
+}
+
+.stream-type {
+  color: var(--accent-primary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  min-width: 70px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.stream-location {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  min-width: 120px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stream-badge {
+  font-size: 0.65rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 2px;
+  font-weight: 500;
+  min-width: 65px;
+  text-align: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stream-badge.risk-critical {
+  background: rgba(232, 93, 117, 0.12);
+  color: var(--accent-red);
+  border: 1px solid rgba(232, 93, 117, 0.25);
+}
+
+.stream-badge.risk-high {
+  background: rgba(245, 150, 56, 0.12);
+  color: var(--accent-orange);
+  border: 1px solid rgba(245, 150, 56, 0.25);
+}
+
+.stream-badge.risk-moderate {
+  background: rgba(245, 194, 107, 0.12);
+  color: var(--accent-yellow);
+  border: 1px solid rgba(245, 194, 107, 0.25);
+}
+
+.stream-badge.risk-low {
+  background: rgba(94, 194, 105, 0.12);
+  color: var(--accent-green);
+  border: 1px solid rgba(94, 194, 105, 0.25);
+}
+
+.stream-data {
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
